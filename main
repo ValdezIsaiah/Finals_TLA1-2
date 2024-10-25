@@ -7,32 +7,30 @@ void main() {
 }
 
 // Provider for Auth logic
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+final authProvider = ChangeNotifierProvider<AuthNotifier>((ref) {
   return AuthNotifier();
 });
 
-// State class
-class AuthState {
-  final String email;
-  final String password;
-
-  AuthState({this.email = '', this.password = ''});
-}
-
 // Notifier class
-class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(AuthState());
+class AuthNotifier extends ChangeNotifier {
+  String _email = '';
+  String _password = '';
+
+  String get email => _email;
+  String get password => _password;
 
   void updateEmail(String email) {
-    state = AuthState(email: email, password: state.password);
+    _email = email;
+    notifyListeners(); // Notify listeners about the change
   }
 
   void updatePassword(String password) {
-    state = AuthState(email: state.email, password: password);
+    _password = password;
+    notifyListeners(); // Notify listeners about the change
   }
 
   bool login() {
-    return state.email.isNotEmpty && state.password.isNotEmpty;
+    return _email.isNotEmpty && _password.isNotEmpty;
   }
 }
 
@@ -41,7 +39,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'finals Project',
+      title: 'Finals Project',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -55,7 +53,7 @@ class MyApp extends StatelessWidget {
 class LoginScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(authProvider);
+    final authNotifier = ref.watch(authProvider);
 
     return Scaffold(
       body: Center(
@@ -70,7 +68,7 @@ class LoginScreen extends ConsumerWidget {
               ),
               SizedBox(height: 40),
               TextField(
-                onChanged: ref.read(authProvider.notifier).updateEmail,
+                onChanged: authNotifier.updateEmail,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -81,7 +79,7 @@ class LoginScreen extends ConsumerWidget {
               SizedBox(height: 20),
               TextField(
                 obscureText: true,
-                onChanged: ref.read(authProvider.notifier).updatePassword,
+                onChanged: authNotifier.updatePassword,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -94,7 +92,7 @@ class LoginScreen extends ConsumerWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    if (ref.read(authProvider.notifier).login()) {
+                    if (authNotifier.login()) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
